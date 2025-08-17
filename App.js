@@ -3,10 +3,49 @@ import { StyleSheet, Text, View, Image, ImageBackground, TouchableOpacity } from
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
+import { createContext, useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 import Tasks from './tasks'; // your tasks page
+import Progress from './progress';
 
 function HomeScreen({ navigation }) {
+
+  Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
+useEffect(() => {
+  const registerForPushNotifications = async () => {
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== "granted") {
+        alert("Failed to get push token for notifications!");
+        return;
+      }
+    }
+    if (Platform.OS === "android") {
+      Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C",
+      });
+    }
+  };
+  registerForPushNotifications();
+}, []);
+
   return (
     <ImageBackground
       source={require('./assets/landscape-7283516_640.jpg')}
@@ -27,14 +66,51 @@ function HomeScreen({ navigation }) {
 
 const Stack = createNativeStackNavigator();
 
+export const TasksContext = React.createContext();
+
+
+
+
 export default function App() {
+  const [todos, setTodos] = React.useState([]);
+
+  useEffect(() => {
+    const loadTodos = async () => {
+      try {
+        const savedTodos = await AsyncStorage.getItem('todos');
+        if (savedTodos !== null) {
+          setTodos(JSON.parse(savedTodos));
+        }
+      } catch (error) {
+        console.log('Error loading todos:', error);
+      }
+    };
+    loadTodos();
+  }, []);
+
+  // Save tasks whenever todos change
+  useEffect(() => {
+    const saveTodos = async () => {
+      try {
+        await AsyncStorage.setItem('todos', JSON.stringify(todos));
+      } catch (error) {
+        console.log('Error saving todos:', error);
+      }
+    };
+    saveTodos();
+  }, [todos]);
+
   return (
+    <TasksContext.Provider value={{ todos, setTodos }}>
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator screenOptions={{ headerShown: false }}
+      initialRouteName="Tasks">
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Tasks" component={Tasks} />
+        <Stack.Screen name="Progress" component={Progress} />
       </Stack.Navigator>
     </NavigationContainer>
+    </TasksContext.Provider>
   );
 }
 

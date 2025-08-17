@@ -1,39 +1,66 @@
 import { useState, useEffect } from "react";
-import { StyleSheet, Text, View, Image,ScrollView,KeyboardAvoidingView,FlatList, Platform, TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, Text, View, Image,KeyboardAvoidingView,FlatList, Platform, TouchableOpacity, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from "@react-native-community/datetimepicker";
+import * as React from 'react';
+import  { useContext } from "react";
+import { useNavigation } from "@react-navigation/native";
+import { TasksContext } from "./App";
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
 
 
-const Tasks =() => {
-    const[todos, setTodos] = useState([]);
+
+
+
+export default function Tasks() {
+    const {todos, setTodos} = useContext(TasksContext);
     const[listInput, setListInput] = useState("");
+    const navigation = useNavigation();
 
-   useEffect(() => {
-    const loadTodos = async () => {
-      try {
-        const savedTodos = await AsyncStorage.getItem('todos');
-        if (savedTodos !== null) {
-          setTodos(JSON.parse(savedTodos));
-        }
-      } catch (error) {
-        console.log('Error loading todos:', error);
+    Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
+useEffect(() => {
+  const registerForPushNotifications = async () => {
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
       }
-    };
-    loadTodos();
-  }, []);
-
-  // Save tasks whenever todos change
-  useEffect(() => {
-    const saveTodos = async () => {
-      try {
-        await AsyncStorage.setItem('todos', JSON.stringify(todos));
-      } catch (error) {
-        console.log('Error saving todos:', error);
+      if (finalStatus !== "granted") {
+        alert("Failed to get push token for notifications!");
+        return;
       }
-    };
-    saveTodos();
-  }, [todos]);
+    }
+    if (Platform.OS === "android") {
+      Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C",
+      });
+    }
+  };
+  registerForPushNotifications();
+}, []);
 
+const scheduleNotification = async (task, dateTime) => {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: "⏰ Reminder!",
+      body: `Don't forget: ${task}`,
+    },
+    trigger: { type: 'date', date: dateTime } // expects a JS Date object
+  });
+};
 
 const [greeting, setGreeting] = useState('');
 useEffect(() => {
@@ -73,7 +100,7 @@ else {
 }
 };
 
-const handleAddTodo = () => {
+const handleAddTodo = async () => {
     if (!listInput.trim()) {
       alert("Please enter a task❗");
       return;
@@ -85,17 +112,19 @@ const handleAddTodo = () => {
         text: listInput.trim(),
         date: date.toISOString(),
       },
-    ]);
+    ]); 
     setListInput("");
+
+    await scheduleNotification(listInput, date);
   };
 
 
  const handleDeleteTodo = (id) => {
     setTodos((prev) => prev.filter((todo) => todo.id !== id));
   };
-  
+
     return (
-        
+        <>
          <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -132,7 +161,7 @@ const handleAddTodo = () => {
             setShowDate(false);
             if (selectedDate) {
               const d = new Date(selectedDate);
-              d.setHours(date.getHours(), date.getMinutes(), 0, 0);
+              d.setHours(date.getHours(), date.getMinutes(), 0);
               setDate(d);
               setShowTime(true);
             }
@@ -150,7 +179,7 @@ const handleAddTodo = () => {
             setShowTime(false);
             if (selectedTime) {
               const d = new Date(date);
-              d.setHours(selectedTime.getHours(), selectedTime.getMinutes(), 0, 0);
+              d.setHours(selectedTime.getHours(), selectedTime.getMinutes(), 0);
               setDate(d);
             }
           }}
@@ -179,12 +208,31 @@ const handleAddTodo = () => {
           </View>
         )}
       />
-      <TouchableOpacity>
-      <Text style={styles.progress}>Progress</Text>
-      </TouchableOpacity>
+      
     </KeyboardAvoidingView>
+    <View style={{borderBlockColor: 'black', borderWidth: 1, flexDirection: 'row',}}>
+    <TouchableOpacity
+      onPress={() => navigation.navigate('Progress')}>
+      <Text style={{borderBlockColor: 'black', borderWidth: 1, height: 50, borderRadius: 16, backgroundColor: '#', width: 100,}}>Progress</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+      onPress={() => navigation.navigate('Progress')}>
+      <Text style={{borderBlockColor: 'black', borderWidth: 1, height: 50, borderRadius: 16, backgroundColor: '#', width: 100,}}>Home</Text>
+      </TouchableOpacity>
+
+    </View>
+      </>
   );
+
 }
+
+
+// Stack Navigator
+
+
+
+
 
 const styles = StyleSheet.create({
    
@@ -194,7 +242,7 @@ const styles = StyleSheet.create({
     },
     container : {
         flex: 1,
-        height: 'auto',
+        width: '100%',
         backgroundColor: '#ECFAE5',
 
     },
@@ -362,4 +410,3 @@ const styles = StyleSheet.create({
     });
 
 
-export default Tasks;
