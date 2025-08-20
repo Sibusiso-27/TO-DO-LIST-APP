@@ -1,12 +1,90 @@
-import { useState, useEffect } from "react";
-import React, { useContext } from "react";
-import { StyleSheet, Text, View,Image,ScrollView,KeyboardAvoidingView,FlatList, Platform} from 'react-native';
+import { useContext } from "react";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image } from "react-native";
 import { TasksContext } from "./App";
 import Checkbox from "expo-checkbox";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native"; 
 
 
-   const Progress = () => {
+const BottomNav = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+
+  const handleNavigate = (screen) => {
+    if (route.name !== screen) {
+      navigation.navigate(screen);
+    }
+  };
+
+  return (
+    <View style={styles.bottomNav}>
+      {/* Home */}
+      <TouchableOpacity
+        onPress={() => handleNavigate("Home")}
+        style={[
+          styles.navButton,
+          route.name === "Home" && styles.activeNavButton,
+        ]}
+      >
+        <Image
+          style={[
+            styles.navIcon,
+            route.name === "Home" && styles.activeNavIcon,
+          ]}
+          source={require("./assets/home2.png")}
+        />
+        <Text style={styles.navText}>Home</Text>
+      </TouchableOpacity>
+
+      {/* Tasks */}
+      <TouchableOpacity
+        onPress={() => handleNavigate("Tasks")}
+        style={[
+          styles.navButton,
+          route.name === "Tasks" && styles.activeNavButton,
+        ]}
+      >
+        <Image
+          style={[
+            styles.navIcon,
+            route.name === "Tasks" && styles.activeNavIcon,
+          ]}
+          source={require("./assets/tasklist.png")}
+        />
+        <Text style={[
+            styles.navText,
+            route.name === "Tasks" && styles.activeNavText,
+          ]}>Tasks</Text>
+      </TouchableOpacity>
+
+      {/* Progress */}
+      <TouchableOpacity
+        onPress={() => handleNavigate("Progress")}
+        style={[
+          styles.navButton,
+          route.name === "Progress" && styles.activeNavButton,
+        ]}
+      >
+        <Image
+          style={[
+            styles.navIcon,
+            route.name === "Progress" && styles.activeNavIcon,
+          ]}
+          source={require("./assets/inprogress.png")}
+        />
+        <Text style={[
+            styles.navText,
+            route.name === "Progress" && styles.activeNavText,
+          ]}>Progress</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const Progress = () => {
   const { todos, setTodos } = useContext(TasksContext);
+  const navigation = useNavigation();
 
   const toggleTask = (id) => {
     setTodos((prev) =>
@@ -16,115 +94,151 @@ import Checkbox from "expo-checkbox";
     );
   };
 
-  const today = new Date();
-  const overdueTasks = todos.filter(
-    (task) => task.dueDate && new Date(task.dueDate) < today && !task.completed
-  );
+  // Separate tasks
+  const inProgressTasks = todos.filter((task) => !task.completed);
   const completedTasks = todos.filter((task) => task.completed);
 
-
   return (
-    
-    <View style={{ backgroundColor: '#ffffe3', flex: 1, width: '100%' }}>
-      <Text style={styles.headingp}>Track Your Progress </Text>
-      <View style={{borderWidth:0, borderColor: '#000', }}>
-      
-    
-      <Text style={styles.section}>All Tasks</Text>
+    <><LinearGradient
+      colors={["#ffe4ec", "#e2f0ff", "#e7ffe9"]} // pastel pink → pastel blue → pastel green
+      style={styles.container1}
+    >
       <ScrollView>
-        {todos.length > 0 ? (
-          todos.map((task) => (
+        <Text style={styles.headingp}>Welcome To Your Progress Tab</Text>
+
+        {/* In Progress Tasks */}
+        <Text style={styles.section}>In Progress</Text>
+        {inProgressTasks.length > 0 ? (
+          inProgressTasks.map((task) => (
             <View key={task.id} style={styles.taskRow}>
-              <Checkbox style={{marginTop: 13, width:22, height:25,}}
+              <Checkbox
                 value={task.completed}
                 onValueChange={() => toggleTask(task.id)}
-                color={task.completed ? "#818C78" : undefined}
-              />
-
-              <View style={{ flexDirection: "column", borderWidth: 1, borderColor: '#000', borderRadius: 10, width:210,
-               borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRightWidth: 0,
-               backgroundColor: '#fff', fontWeight: 'thin',
-              }}>
-                <Text
-                  style={[
-                    styles.taskText,
-                    task.completed && {
-                      textDecorationLine: "line-through",
-                      color: "gray",
-                    },
-                  ]}
-                >
-                  {task.text}
-                </Text>
-                <Text style={{ fontSize: 10 }}>
-                  {new Date(task.date).toLocaleString()}
-                </Text>
-                </View>
-                {/* ✅ Status text */}
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: "bold",
-                    marginLeft: 0,
-                     borderWidth: 1, borderColor: '#000', borderRadius: 10,
-                     borderLeftWidth:0, borderTopLeftRadius:0, borderBottomLeftRadius:0,
-                    padding: 5,
-                    backgroundColor: '#fff',
-                    color: task.completed ? "gray" : "green",
-                  }}
-                >
-                  {task.completed ? "Completed" : "In Progress"}
-                </Text>
-              
+                color={task.completed ? "#007aff" : undefined} />
+              <Text style={styles.taskText}>{task.text}</Text>
+              <Text style={styles.dateText}>
+                {new Date(task.date).toLocaleString()}
+              </Text>
             </View>
           ))
         ) : (
-          <Text>No tasks yet</Text>
+          <Text>No tasks in progress 😊</Text>
+        )}
+
+        {/* Completed Tasks */}
+        <Text style={styles.section}>Completed</Text>
+        {completedTasks.length > 0 ? (
+          completedTasks.map((task) => (
+            <View key={task.id} style={styles.taskRow}>
+              <Checkbox
+                value={task.completed}
+                onValueChange={() => toggleTask(task.id)}
+                color={task.completed ? "#007aff" : undefined} />
+              <Text
+                style={[
+                  styles.taskText,
+                  { textDecorationLine: "line-through", color: "gray" },
+                ]}
+              >
+                {task.text}
+              </Text>
+              <Text style={styles.dateText}>
+                {new Date(task.date).toLocaleString()}
+              </Text>
+            </View>
+          ))
+        ) : (
+          <Text>No tasks completed yet</Text>
         )}
       </ScrollView>
-      <View style={{borderBlockColor: 'black', borderWidth: 1, flexDirection: 'row',}}>
-      </View>
-      {/* Closing tag for the outermost View */}
-    </View>
-    </View>
+    </LinearGradient>
+    <BottomNav>navigation={navigation}</BottomNav></>
   );
 };
 
-export default Progress;
-
 const styles = StyleSheet.create({
-headingp : {
- alignSelf: 'flex-start',
- marginTop: 20,
- marginRight: 50,
- fontSize: 30,
- fontWeight: 'bold',
+  container1: {
+    flex: 1,
+    width: "100%",
+    padding: 15,
+  },
+  headingp: {
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginVertical: 10,
+  },
+  section: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginVertical: 10,
+  },
+  taskRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    backgroundColor: "rgba(255,255,255,0.7)",
+    padding: 10,
+    borderRadius: 10,
+  },
+  taskText: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 14,
+  },
+  dateText: {
+    fontSize: 10,
+    marginLeft: 5,
+    color: "gray",
+  },
 
-},
-section : {
- borderColor: '#000',
- borderWidth: 1,
- width: 100,
- alignSelf: 'center',
- textAlign: 'center',
- borderRadius: 10,
+  
+     bottomNav: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    backgroundColor: "#FAFAFA", // semi-transparent white
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingVertical: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5, // Android shadow
+  },
+  navButton: {
+    flex: 1,
+    alignItems: "center",
+  },
+  navIcon: {
+    width: 24,
+    height: 24,
+    marginBottom: 4,
+    tintColor: "#B9B9B8", // iOS blue, you can change to pastel pink/purple/etc
+  },
+  navText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#B9B9B8",
+  },
 
-},
-
-taskRow : {
-    borderColor: '#000',
- borderWidth: 0,
-marginTop: 10,
-borderRadius: 0,
-flexDirection: 'row',
-
-
-},
-
-taskText: {
-  fontSize: 16,
-  color: '#000',
-  marginLeft: 5,
-},
+activeNavButton: {
+    backgroundColor: "#ebfafc", // pastel blue bg
+  borderRadius: 20,
+  paddingVertical: 6,
+  paddingHorizontal: 12,
+  },
+  activeNavIcon: {
+    tintColor: "#64B5F6", // brighter blue
+  },
+  activeNavText: {
+    color: "#64B5F6",
+    fontWeight: "700",
+  textDecorationLine: 'underline',
+  textDecorationColor: '#6EC1E4',
+  },
 
 });
+
+export default Progress;
