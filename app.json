@@ -4,13 +4,13 @@
     "slug": "DOITNOW",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/to-do-list.png",
+    "icon": "./assets/tasks.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "image": "./assets/tasks.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#EEE2F1"
     },
     "ios": {
       "supportsTablet": true
@@ -18,7 +18,7 @@
     "android": {
       "adaptiveIcon": {
       
-     "backgroundColor": "#ffffff"
+     "backgroundColor": "#EEE2F1"
       },
       "edgeToEdgeEnabled": true
     },
