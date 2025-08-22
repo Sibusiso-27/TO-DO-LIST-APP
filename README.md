@@ -1,10 +1,11 @@
 DOITNOW – React Native To-Do App 
 
-A simple, stylish productivity app built with React Native & Expo.
+>A simple, stylish productivity app built with React Native & Expo.
 
-This is my first mobile app project, designed to help you organize tasks, set reminders, and get things DONE!
+>This is my first mobile app project, designed to help you organize tasks, set reminders, and get things DONE!
 
  Features INCLUDE:
+ 
 Add, delete, and manage to-do tasks
 Set date & time reminders automatically
 Beautiful, smooth UI with gradients and animations
