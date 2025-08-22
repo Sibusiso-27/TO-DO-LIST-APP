@@ -10,9 +10,10 @@ import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRoute } from "@react-navigation/native";
+import { scheduleNotification } from './App';
 
 
-// BottomNav component moved outside Tasks
+
 const BottomNav = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -26,9 +27,9 @@ const BottomNav = () => {
 
   return (
     <View style={styles.bottomNav}>
-      {/* Home */}
+      
       <TouchableOpacity
-        onPress={() => handleNavigate("App")}
+        onPress={() => handleNavigate("Home")}
         style={[
           styles.navButton,
           route.name === "Home" && styles.activeNavButton,
@@ -89,55 +90,15 @@ const BottomNav = () => {
   );
 };
 
-// Render BottomNav inside Tasks
+
 export default function Tasks() {
     const {todos, setTodos} = useContext(TasksContext);
     const[listInput, setListInput] = useState("");
     const navigation = useNavigation();
+     const totalTasks = todos.length;
 
-    Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+  {/*const {cartegory, setCartegory} =useState('');*/}
 
-useEffect(() => {
-  const registerForPushNotifications = async () => {
-    if (Device.isDevice) {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      if (existingStatus !== "granted") {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== "granted") {
-        alert("Failed to get push token for notifications!");
-        return;
-      }
-    }
-    if (Platform.OS === "android") {
-      Notifications.setNotificationChannelAsync("default", {
-        name: "default",
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#FF231F7C",
-      });
-    }
-  };
-  registerForPushNotifications();
-}, []);
-
-const scheduleNotification = async (task, dateTime) => {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: "⏰ Reminder!",
-      body: `Don't forget to: ${task}`,
-    },
-    trigger: { type: 'date', date: dateTime } // expects a JS Date object
-  });
-};
 
 const [greeting, setGreeting] = useState('');
 useEffect(() => {
@@ -167,15 +128,29 @@ useEffect(() => {
 const [date, setDate] = useState(new Date());
 const [showDate, setShowDate] = useState(false);
 const [showTime, setShowTime] = useState(false);
+const [dateSelected, setDateSelected] = useState(false);
 
-const onchange = (_, selectedDate) => {
-  if (selectedDate) {
-  setShowDate(false);
-  setDate(selectedDate);
-}
-else {
-    setShow(false);
-}
+
+  const formatTodoDate = (isoString) => {
+    const d = new Date(isoString);
+    const options = { weekday: 'long', day: 'numeric', month: 'long' };
+    const datePart = d.toLocaleDateString(undefined, options);
+
+    const hours = d.getHours().toString().padStart(2, '0');
+    const minutes = d.getMinutes().toString().padStart(2, '0');
+    const timePart = `${hours}:${minutes}`;
+
+    return `${datePart} ${timePart}`;
+  };
+
+  const scheduleNotification = async (task, dateTime) => {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: "⏰ Reminder!",
+      body: `Don't forget to ${task}`,
+    },
+    trigger: { type: 'date', date: dateTime } 
+  });
 };
 
 const handleAddTodo = async () => {
@@ -183,6 +158,12 @@ const handleAddTodo = async () => {
       alert("Please enter a task❗");
       return;
     }
+
+    if (!dateSelected) {
+    alert("Please select a date and time⏱");
+    return;
+  }
+
     setTodos((prev) => [
       ...prev,
       {
@@ -190,20 +171,17 @@ const handleAddTodo = async () => {
         text: listInput.trim(),
         date: date.toISOString(),
       },
-    ]); 
-    setListInput("");
+    ]);
 
-    await scheduleNotification(listInput, date);
+    setListInput("");
+    setDateSelected(false);
+   await scheduleNotification(listInput, date);
   };
 
 
  const handleDeleteTodo = (id) => {
     setTodos((prev) => prev.filter((todo) => todo.id !== id));
   };
-
-
-
-    // ... rest of your Tasks code ...
 
     return (
       <>
@@ -212,28 +190,30 @@ const handleAddTodo = async () => {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         > 
           <LinearGradient
-            colors={["#ffe4ec", "#e2f0ff", "#e7ffe9"]}
+            colors={["#D9E8F3","#FCD9D9", "#fff"]}
             style={styles.container}
           >
-            <Text style={styles.greeting}>{greeting}, User! 👋</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                value={listInput}
-                onChangeText={setListInput}
-                placeholder="Add a task..."
-              />
-              <TouchableOpacity
-                style={styles.Btndate}
-                onPress={() => setShowDate(true)}
-              >
-                <Text style={styles.btnText}><Image style={styles.calicon} 
-                source={require('./assets/calendar.png')} /></Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.addBtn} onPress={handleAddTodo}>
-                <Text style={styles.btnText}><Image style={styles.addicon}
-                source={require('./assets/pluskey2.png')} /></Text>
-              </TouchableOpacity>
+            {/*<Text style={styles.greeting}>{greeting}, User! 👋</Text>*/}
+            <Text style={styles.greeting}>What’s on Your List?</Text>
+         <View style={styles.inputContainer}>
+  <TextInput
+    style={styles.input}
+    value={listInput}
+    onChangeText={setListInput}
+    placeholder="Add a task..."
+    placeholderTextColor="#666"
+  />
+  
+  <TouchableOpacity style={styles.iconBtn} onPress={() => setShowDate(true)}>
+    <Image style={styles.icon} source={require("./assets/lastcalendar.png")} />
+  </TouchableOpacity>
+
+  <TouchableOpacity style={[styles.iconBtn, !dateSelected && { opacity: 0.5 }]}
+  onPress={handleAddTodo}
+  disabled={!dateSelected}
+  >
+    <Image style={styles.icon} source={require("./assets/final.png")} />
+  </TouchableOpacity>
             </View>
             {showDate && (
               <DateTimePicker
@@ -247,6 +227,7 @@ const handleAddTodo = async () => {
                     d.setHours(date.getHours(), date.getMinutes(), 0);
                     setDate(d);
                     setShowTime(true);
+                    setDateSelected(true);
                   }
                 }}
               />
@@ -262,10 +243,23 @@ const handleAddTodo = async () => {
                     const d = new Date(date);
                     d.setHours(selectedTime.getHours(), selectedTime.getMinutes(), 0);
                     setDate(d);
+                    setDateSelected(true);
                   }
                 }}
               />
             )}
+
+            { totalTasks === 0 ? (
+              <View >
+                <Image style={{width:200, height: 200, alignSelf: 'center', marginTop: 90,marginLeft:30,}} source={require("./assets/notask.png")}/>
+                <Text style={{textAlign: 'center', color: 'gray',}}>No Tasks Yet</Text>
+                <View>
+                <Text style={{textAlign: 'center', color: 'gray', marginTop: 80,}}>❗NOTE❗</Text>
+                <Text style={{textAlign: 'center', color: 'gray',}}>⨀Add Date and Time first!</Text>
+                 <Text style={{textAlign: 'center', color: 'gray',}}>⨀Reminders are auto!</Text>
+                </View>
+              </View>
+            ): (
             <FlatList
               data={todos}
               keyExtractor={(item) => item.id}
@@ -275,7 +269,7 @@ const handleAddTodo = async () => {
                     <Text style={styles.todoText}>{item.text}</Text>
                     <Text style={styles.todoDate}>
                       ⏱ 
-                      {new Date(item.date).toLocaleString()} 
+                      {formatTodoDate(item.date)} 
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -288,15 +282,16 @@ const handleAddTodo = async () => {
                 </View>
               )}
             />
+            )}
           </LinearGradient> 
         </KeyboardAvoidingView>
         <BottomNav navigation={navigation} />
+        
       </>
     );
 }
 
 
-// Stack Navigator
 
 
 
@@ -305,105 +300,79 @@ const handleAddTodo = async () => {
 const styles = StyleSheet.create({
    
 
-    progress : {
-      textAlign: 'center',
-    },
     container: {
     flex: 1,
     width: "100%",
   
   },
-    greeting : {
-        marginTop: 30,
-        marginLeft:10,
-        marginRight: 120,
-        fontSize: 20,
-        fontWeight: '600',
+   greeting: {
+  marginTop: 30,
+  marginLeft: 0,
+  color: "#2d2d2d",
+  textAlign:'center',
+  fontSize: 20,
+  fontWeight: "600",
+  textShadowColor: "rgba(0, 0, 0, 0.25)", 
+  textShadowOffset: { width: 1, height: 1 }, 
+  textShadowRadius: 2,
+},
 
+inputContainer: {
+  flexDirection: "row",
+  alignItems: "center",
+  marginTop: 15,
+  marginHorizontal: 10,
+  backgroundColor: "rgba(255,255,255,0.7)",
+  borderRadius: 16,
+  paddingHorizontal: 10,
+  shadowColor: "#000",
+  shadowOpacity: 0.08,
+  shadowRadius: 6,
+  shadowOffset: { width: 0, height: 3 },
+  elevation: 0,
+},
 
+input: {
+  flex: 1, 
+  fontSize: 16,
+  paddingVertical: 10,
+  paddingHorizontal: 12,
+  color: "#333",
+},
 
-    },
-    inputContainer: {
-        marginTop:10,
-        flexDirection: 'row',
-        backgroundColor: '',
-        marginRight: 5,
-    },
+iconBtn: {
+  padding: 8,
+  marginLeft: 4,
+  borderRadius: 12,
+},
 
-    input : {
-        borderWidth: 1,
-        borderColor: 'black',
-        borderStyle: 'solid',
-        borderRightWidth: 0,
-        width:240,
-        borderRadius: 16,
-        backgroundColor: 'rgba(255,255,255,0.7)',
-        borderTopRightRadius: 0,
-        borderBottomRightRadius: 0,
-    
-    },
-
-    addBtn: {
-        padding: 4,
-        borderColor: '#000',
-        borderWidth: 1,
-        borderLeftWidth:0,
-        borderRightWidth: 2,
-        borderStyle: 'solid',
-        width: 40,
-        alignItems: 'center',
-        borderBottomRightRadius: 16,
-        borderTopRightRadius: 16,
-        backgroundColor: 'rgba(255,255,255,0.7)',
-
-    },
-     btnText: {
-        color: 'black',
-        fontSize: 15,
-        textAlign: 'center',
-     },
-
-     Btndate: { 
-        padding: 6,
-        borderColor: '#000',
-        borderWidth: 1,
-        borderStyle: 'solid',
-        width: 40,
-        alignItems: 'center',
-        borderRadius: 0,
-        borderLeftWidth:0,
-        borderRightWidth: 0,
-        backgroundColor: 'rgba(255,255,255,0.7)',
-        
-     },
-
-     calicon : {
-        width: 28,
-        height: 28,
-        
-
-     },
-
-     calicon1 : {
-        width: 28,
-        height: 28,
-        
-        
-
-     },
+icon: {
+  width: 26,
+  height: 26,
+  tintColor: "#333", 
+},
      
-
-     addicon : {
-        width: 30,
-        height: 30,
-        
+  calicon1 : {
+        width: 28,
+        height: 28,
+     },
+   calicon : {
+        width: 28,
+        height: 28,
      },
 
-     minical : {
+
+   minical : {
         width: 25,
         height: 25,
 
      },
+     
+     calicon1 : {
+        width: 28,
+        height: 28,
+     },
+        
 
      todoText : {
     flex: 1,
@@ -451,11 +420,11 @@ const styles = StyleSheet.create({
 
      deleteBtn: {
         margin: 10,
-        marginLeft: 100,
+        marginLeft: 85,
         alignItems: 'center',
         borderColor: '#000',
         borderWidth: 0,
-        backgroundColor: 'rgba(255,255,255,0.7)',
+        
         borderRadius: 5,
         padding: 2,
      },
@@ -481,7 +450,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    backgroundColor: "#FAFAFA", // semi-transparent white
+    backgroundColor: "#FAFAFA", 
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingVertical: 10,
@@ -489,7 +458,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 5, // Android shadow
+    elevation: 5, 
   },
   navButton: {
     flex: 1,
@@ -499,7 +468,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     marginBottom: 4,
-    tintColor: "#B9B9B8", // iOS blue, you can change to pastel pink/purple/etc
+    tintColor: "#B9B9B8", 
   },
   navText: {
     fontSize: 12,
@@ -508,13 +477,13 @@ const styles = StyleSheet.create({
   },
 
   activeNavButton: {
-    backgroundColor: "#ebfafc", // pastel blue bg
+    backgroundColor: "#ebfafc", 
   borderRadius: 20,
   paddingVertical: 6,
   paddingHorizontal: 12,
   },
   activeNavIcon: {
-    tintColor: "#64B5F6", // brighter blue
+    tintColor: "#64B5F6", 
   },
   activeNavText: {
     color: "#64B5F6",

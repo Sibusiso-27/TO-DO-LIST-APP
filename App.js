@@ -1,16 +1,24 @@
 import * as React from 'react';
-import { StyleSheet, Text, View, Image, ImageBackground, TouchableOpacity } from 'react-native';
+import { StyleSheet, Platform, Text, View, Image, ImageBackground, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { createContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
+import { useNavigation } from "@react-navigation/native";
+import { useRoute } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 
 
-import Tasks from './tasks'; // your tasks page
+import Tasks from './tasks'; 
 import Progress from './progress';
+import HomeScreen from './Home';
 
-function HomeScreen({ navigation }) {
+
+
+const WelcomeScreen = ({navigation}) => {
 
   Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -19,7 +27,7 @@ function HomeScreen({ navigation }) {
     shouldSetBadge: true,
   }),
 });
-
+ 
 useEffect(() => {
   const registerForPushNotifications = async () => {
     if (Device.isDevice) {
@@ -46,21 +54,23 @@ useEffect(() => {
   registerForPushNotifications();
 }, []);
 
+
+
+
   return (
-    <ImageBackground
-      source={require('./assets/landscape-7283516_640.jpg')}
+     <LinearGradient
+      colors={["#dbeafe", "#ffffff", "#fde2e4"]}
       style={styles.background}
-      resizeMode="cover"
     >
       <View style={styles.container}>
-        <StatusBar style="auto" />
-        <Image style={styles.bgimage} source={require('./assets/note-book-306253_1280.png')} />
-        <TouchableOpacity onPress={() => navigation.navigate('Tasks')}>
-          <Text style={styles.heading}>START A TASK</Text>
+        <Image style={styles.bgimage} source={require("./assets/landing1.png")}/> 
+        
+        <Text style={styles.quote}>“A Task a day keeps your mind awake!”</Text>
+        <TouchableOpacity  style={styles.startBtn} onPress={() => navigation.navigate('Home')}>
+          <Text style={styles.startBtnText}>Get Started</Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.text}>DoItNow©2025, All rights reserved.</Text>
-    </ImageBackground>
+    </LinearGradient>
   );
 }
 
@@ -104,8 +114,9 @@ export default function App() {
     <TasksContext.Provider value={{ todos, setTodos }}>
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}
-      initialRouteName="Tasks">
-        <Stack.Screen name="Home" component={HomeScreen} />
+      initialRouteName="Welcome">
+        <Stack.Screen name="Welcome" component={WelcomeScreen} />
+         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Tasks" component={Tasks} />
         <Stack.Screen name="Progress" component={Progress} />
       </Stack.Navigator>
@@ -115,43 +126,52 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  background: {
+    background: {
     flex: 1,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bgimage: {
-    width: 200,
-    height: 200,
-    transform: [{ rotate: '-10deg' }],
-    margin: 150,
-    padding: 10,
-  },
-  heading: {
-    fontSize: 20,
-    textAlign: 'center',
-    fontFamily: 'Courier New',
-    width: 200,
-    textShadowColor: '#FFF',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 10,
-    borderStyle: 'solid',
-    backgroundColor: '#FFF2EB',
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#fff',
-    padding: 10,
-    marginLeft: 150,
-    color: '#504B38',
-    fontWeight: 'bold',
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
   container: {
-    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
   },
-  text: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#504B38',
+  bgimage: {
+    width: 220,
+    height: 220,
+    transform: [{ rotate: "-5deg" }],
+    marginBottom: 40, 
+    resizeMode: "contain",
+    tintColor: '#000',
   },
+  quote: {
+    fontSize: 18,
+    fontStyle: "italic",
+    color: "#fff",
+    textAlign: "center",
+    marginBottom: 50,
+    paddingHorizontal: 20,
+    lineHeight: 24, 
+    textShadowColor: "rgba(0,0,0,0.6)", 
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 4,
+  },
+  startBtn: {
+  backgroundColor: "#FCD9D9", 
+  paddingVertical: 12,
+  paddingHorizontal: 28,
+  borderRadius: 25,
+  shadowColor: "#000",
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 3,
+},
+startBtnText: {
+  color: "#fff",
+  fontSize: 16,
+  fontWeight: "600",
+},
+
 });

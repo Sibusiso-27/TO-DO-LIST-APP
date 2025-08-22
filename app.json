@@ -1,29 +1,39 @@
 {
   "expo": {
-    "name": "DOITNOW",
-    "slug": "DOITNOW",
+    "name": "DoItNow",
+    "slug": "DoItNow",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/tasks.png",
+    "icon": "./assets/to-do.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/tasks.png",
-      "resizeMode": "cover",
-      "backgroundColor": "#EEE2F1"
+      "image": "./assets/to-do.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#C2E5F0"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sibusiso27.DoItNow",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
-      
-     "backgroundColor": "#EEE2F1"
+        "foregroundImage": "./assets/tasks.png",
+        "backgroundColor": "#EEE2F1"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.sibusiso27.DoItNow"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "b3d99115-f40f-4167-a286-669580825e60"
+      }
     }
   }
 }

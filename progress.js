@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image } from "react-native";
 import { TasksContext } from "./App";
 import Checkbox from "expo-checkbox";
+import { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRoute } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native"; 
@@ -86,6 +87,17 @@ const Progress = () => {
   const { todos, setTodos } = useContext(TasksContext);
   const navigation = useNavigation();
 
+   const [update, setUpdate] = useState('');
+    useEffect(() => {
+      const getDate = () => {
+        const today = new Date();
+        const options = { weekday: 'long', day: 'numeric', month: 'long' };
+        const formattedDate = today.toLocaleDateString(undefined, options);
+        setUpdate(formattedDate);
+      };
+      getDate();
+    }, []);
+
   const toggleTask = (id) => {
     setTodos((prev) =>
       prev.map((task) =>
@@ -100,11 +112,16 @@ const Progress = () => {
 
   return (
     <><LinearGradient
-      colors={["#ffe4ec", "#e2f0ff", "#e7ffe9"]} // pastel pink → pastel blue → pastel green
+      colors={["#D9E8F3","#FCD9D9", "#fff"]} 
       style={styles.container1}
     >
       <ScrollView>
-        <Text style={styles.headingp}>Welcome To Your Progress Tab</Text>
+        <Text style={styles.headingp}>Your Progress Report</Text>
+
+        
+        <View style={styles.top}>
+        <Text style={styles.dateUpdate}>{update}</Text>
+        </View>
 
         {/* In Progress Tasks */}
         <Text style={styles.section}>In Progress</Text>
@@ -122,11 +139,15 @@ const Progress = () => {
             </View>
           ))
         ) : (
-          <Text>No tasks in progress 😊</Text>
+          <View>
+             <Image style={{width: 150, height: 150, alignSelf: 'center', marginTop: 10,}} source={require("./assets/servey.png")} />
+          <Text style={{textAlign: 'center', color: 'gray',}}>No tasks in progress </Text>
+          </View>
         )}
 
         {/* Completed Tasks */}
         <Text style={styles.section}>Completed</Text>
+
         {completedTasks.length > 0 ? (
           completedTasks.map((task) => (
             <View key={task.id} style={styles.taskRow}>
@@ -148,7 +169,11 @@ const Progress = () => {
             </View>
           ))
         ) : (
-          <Text>No tasks completed yet</Text>
+          <View>
+          <Image style={{width: 150, height: 150, alignSelf: 'center', marginTop: 10,}} source={require("./assets/completed.png")} />
+          <Text style={{textAlign: 'center', color: 'gray',}}>No tasks completed yet</Text>
+          </View>
+
         )}
       </ScrollView>
     </LinearGradient>
@@ -162,11 +187,27 @@ const styles = StyleSheet.create({
     width: "100%",
     padding: 15,
   },
+
+   top: {
+    marginTop: 10,
+    fontSize: 20,
+    alignItems: "flex-end",
+  },
+ dateUpdate :{
+  color: 'gray',
+
+ },
   headingp: {
     fontSize: 20,
     fontWeight: "bold",
     textAlign: "center",
+    marginTop: 20,
     marginVertical: 10,
+    letterSpacing: 0.6,
+    color: "#2d2d2d",
+    textShadowColor: "rgba(0, 0, 0, 0.25)", 
+    textShadowOffset: { width: 1, height: 1 }, 
+    textShadowRadius: 4,
   },
   section: {
     fontSize: 16,
@@ -197,7 +238,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    backgroundColor: "#FAFAFA", // semi-transparent white
+    backgroundColor: "#FAFAFA", 
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingVertical: 10,
@@ -205,7 +246,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 5, // Android shadow
+    elevation: 5, 
   },
   navButton: {
     flex: 1,
@@ -215,7 +256,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     marginBottom: 4,
-    tintColor: "#B9B9B8", // iOS blue, you can change to pastel pink/purple/etc
+    tintColor: "#B9B9B8", 
   },
   navText: {
     fontSize: 12,
@@ -224,13 +265,13 @@ const styles = StyleSheet.create({
   },
 
 activeNavButton: {
-    backgroundColor: "#ebfafc", // pastel blue bg
+    backgroundColor: "#ebfafc", 
   borderRadius: 20,
   paddingVertical: 6,
   paddingHorizontal: 12,
   },
   activeNavIcon: {
-    tintColor: "#64B5F6", // brighter blue
+    tintColor: "#64B5F6",
   },
   activeNavText: {
     color: "#64B5F6",
