@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { StyleSheet, Text, View, Image,KeyboardAvoidingView,FlatList, Platform, TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, SectionList, Text, View, Image,KeyboardAvoidingView,FlatList, Platform, TouchableOpacity, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as React from 'react';
@@ -122,6 +122,38 @@ useEffect(() => {
   const interval = setInterval(getGreeting, 60000);
   return () => clearInterval(interval);
 }, []);
+
+//This is the logic for showing  date as a heading.
+const getDayLabel = (isoDate) => {
+  const taskDate = new Date(isoDate);
+  const today = new Date();
+  
+ 
+  const taskDay = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate());
+  const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const diffTime = todayDay - taskDay;
+  const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === -1) return "Tomorrow";
+  if (diffDays === 1) return "Yesterday";
+  
+
+
+ 
+  return taskDate.toLocaleDateString(undefined, { day : "numeric", weekday: "long", month: "short" });
+};
+
+
+const groupBySmartDay = (todos) => {
+  return todos.reduce((groups, todo) => {
+    const dayLabel = getDayLabel(todo.date);
+    if (!groups[dayLabel]) groups[dayLabel] = [];
+    groups[dayLabel].push(todo);
+    return groups;
+  }, {});
+};
 
 
 // Calendar logic
@@ -260,27 +292,32 @@ const handleAddTodo = async () => {
                 </View>
               </View>
             ): (
-            <FlatList
-              data={todos}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <View style={styles.todoItem}>
-                  <View>
-                    <Text style={styles.todoText}>{item.text}</Text>
-                    <Text style={styles.todoDate}>
-                      ⏱ 
-                      {formatTodoDate(item.date)} 
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.deleteBtn}
-                    onPress={() => handleDeleteTodo(item.id)}
-                  >
-                    <Text style={styles.del}><Image style={styles.calicon} 
-                    source={require('./assets/dustbin.png')} /></Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+                 <SectionList
+  sections={Object.entries(groupBySmartDay(todos)).map(([title, data]) => ({
+    title,
+    data,
+  }))}
+  keyExtractor={(item) => item.id}
+  renderSectionHeader={({ section: { title } }) => (
+    <Text style={styles.sectionHeader}>{title}</Text>
+  )}
+  renderItem={({ item }) => (
+    <View style={styles.todoItem}>
+      <View>
+        <Text style={styles.todoText}>{item.text}</Text>
+        <Text style={styles.todoDate}>⏱ {formatTodoDate(item.date)}</Text>
+      </View>
+      <TouchableOpacity
+        style={styles.deleteBtn}
+        onPress={() => handleDeleteTodo(item.id)}
+      >
+        <Image
+          style={styles.calicon}
+          source={require("./assets/dustbin.png")}
+        />
+      </TouchableOpacity>
+    </View>
+  )}
             />
             )}
           </LinearGradient> 
@@ -316,6 +353,15 @@ const styles = StyleSheet.create({
   textShadowOffset: { width: 1, height: 1 }, 
   textShadowRadius: 2,
 },
+
+sectionHeader: {
+  fontSize: 18,
+  fontWeight: "bold",
+  marginTop: 15,
+  marginBottom: 5,
+  color: "#333",
+},
+
 
 inputContainer: {
   flexDirection: "row",
@@ -400,7 +446,7 @@ icon: {
      },
     
     todoItem: {
-    margin: 10,
+    margin: 12,
      flexDirection: "row",
     alignItems: "center",
     marginBottom: 3,
@@ -424,7 +470,6 @@ icon: {
         alignItems: 'center',
         borderColor: '#000',
         borderWidth: 0,
-        
         borderRadius: 5,
         padding: 2,
      },

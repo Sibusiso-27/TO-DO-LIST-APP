@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/to-do.png",
       "resizeMode": "contain",
-      "backgroundColor": "#C2E5F0"
+      "backgroundColor": "#EEE2F1"
     },
     "ios": {
       "supportsTablet": true,
@@ -21,7 +21,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/tasks.png",
+        "foregroundImage": "./assets/to-do.png",
         "backgroundColor": "#EEE2F1"
       },
       "edgeToEdgeEnabled": true,
