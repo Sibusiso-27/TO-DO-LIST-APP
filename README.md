@@ -18,4 +18,4 @@ Building multiple screens with navigation
 Designing modern mobile UI
 Integrating notifications & reminders
 
-**Active development, updates pushed on timely intervals.
+
